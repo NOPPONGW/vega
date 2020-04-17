@@ -1,0 +1,44 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "My interactive chart", 
+  "background": "mintcream",  
+  "title": {"text":"จำนวนผู้โดยสารรถไฟใต้ดิน ปี 2560","anchor":"middle","fontSize":20},
+  "data": {"url": "https://raw.githubusercontent.com/NOPPONGW/vega-project/master/inf_ข้อมูลจำนวนผู้โดยสารรถไฟใต้ดิน60(2).csv"},
+"hconcat": [{
+  "width":500,
+  "height":500,
+  "view": {"fill": "white"},
+  "selection": {"pts": {"type": "multi"}},
+  "mark": "bar",
+  "encoding": {
+    "x": {"timeUnit":"month","field": "month","type": "temporal","title":"Month"},
+    "y": {"aggregate": "sum", "field": "total", "type":"quantitative","title":"Total"},
+    "color": {
+      "condition": {"selection": "pts","field": "station", "type": "nominal"},
+      "value": "gainsboro"},   
+      "tooltip": [{"field": "station", "type": "nominal"},
+                {"timeUnit":"month","field": "month","type": "nominal"},
+                {"field": "total", "type": "quantitative"}],
+      "size": {"value": 25}
+      
+              }
+},
+{  
+  "selection": {"pts2": {"type": "multi"}},
+  "width":500,
+  "height":500,
+  "view": {"fill": "white"},
+  "mark": {"type":"line","point": "true","interpolate": "monotone"},
+  "encoding": {
+    "x": {"timeUnit":"month","field": "month","type": "nominal","title":"Month"},
+    "y": {"field": "total", "type": "quantitative","title":"Total"},
+    "color": {
+      "condition": {"selection": "pts2","field": "station", "type": "nominal"},
+      "value": "gainsboro"},     
+      "tooltip": [{"field": "station", "type": "nominal"},
+                {"timeUnit":"month","field": "month","type": "nominal"},
+                {"field": "total", "type": "quantitative"}]          
+              }
+}  
+]
+}
