@@ -1,0 +1,707 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "My interactive chart",
+  "background": "mintcream",
+  "padding": 5,
+  "height": 500,
+  "title": {
+    "text": "จำนวนผู้โดยสารรถไฟใต้ดิน ปี 2560",
+    "anchor": "middle",
+    "fontSize": 20
+  },
+  "data": [
+    {
+      "name": "pts_store"
+    },
+    {
+      "name": "pts2_store"
+    },
+    {
+      "name": "source_0",
+      "url": "https://raw.githubusercontent.com/NOPPONGW/vega-project/master/inf_ข้อมูลจำนวนผู้โดยสารรถไฟใต้ดิน60(2).csv",
+      "format": {
+        "type": "csv",
+        "parse": {
+          "month": "date"
+        },
+        "delimiter": ","
+      },
+      "transform": [
+        {
+          "type": "identifier",
+          "as": "_vgsid_"
+        },
+        {
+          "field": "month",
+          "type": "timeunit",
+          "units": [
+            "month"
+          ],
+          "as": [
+            "month_month",
+            "month_month_end"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "data_0",
+      "source": "source_0",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "isValid(datum[\"total\"]) && isFinite(+datum[\"total\"])"
+        }
+      ]
+    },
+    {
+      "name": "data_1",
+      "source": "source_0",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "month_month",
+            "month_month_end",
+            "station",
+            "total"
+          ],
+          "ops": [
+            "sum"
+          ],
+          "fields": [
+            "total"
+          ],
+          "as": [
+            "sum_total"
+          ]
+        },
+        {
+          "type": "identifier",
+          "as": "_vgsid_"
+        },
+        {
+          "type": "stack",
+          "groupby": [
+            "month_month"
+          ],
+          "field": "sum_total",
+          "sort": {
+            "field": [
+              "station"
+            ],
+            "order": [
+              "descending"
+            ]
+          },
+          "as": [
+            "sum_total_start",
+            "sum_total_end"
+          ],
+          "offset": "zero"
+        },
+        {
+          "type": "filter",
+          "expr": "(isDate(datum[\"month_month\"]) || (isValid(datum[\"month_month\"]) && isFinite(+datum[\"month_month\"]))) && isValid(datum[\"sum_total\"]) && isFinite(+datum[\"sum_total\"])"
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "childWidth",
+      "value": 500
+    },
+    {
+      "name": "unit",
+      "value": {},
+      "on": [
+        {
+          "events": "mousemove",
+          "update": "isTuple(group()) ? group() : unit"
+        }
+      ]
+    },
+    {
+      "name": "pts",
+      "update": "vlSelectionResolve(\"pts_store\", \"union\", true)"
+    },
+    {
+      "name": "pts2",
+      "update": "vlSelectionResolve(\"pts2_store\", \"union\", true)"
+    }
+  ],
+  "layout": {
+    "padding": 20,
+    "bounds": "full",
+    "align": "each"
+  },
+  "marks": [
+    {
+      "type": "group",
+      "name": "concat_0_group",
+      "style": "cell",
+      "encode": {
+        "update": {
+          "width": {
+            "signal": "childWidth"
+          },
+          "height": {
+            "signal": "height"
+          },
+          "fill": {
+            "value": "white"
+          }
+        }
+      },
+      "signals": [
+        {
+          "name": "pts_tuple",
+          "on": [
+            {
+              "events": [
+                {
+                  "source": "scope",
+                  "type": "click"
+                }
+              ],
+              "update": "datum && item().mark.marktype !== 'group' ? {unit: \"concat_0\", fields: pts_tuple_fields, values: [(item().isVoronoi ? datum.datum : datum)[\"_vgsid_\"]]} : null",
+              "force": true
+            },
+            {
+              "events": [
+                {
+                  "source": "scope",
+                  "type": "dblclick"
+                }
+              ],
+              "update": "null"
+            }
+          ]
+        },
+        {
+          "name": "pts_tuple_fields",
+          "value": [
+            {
+              "type": "E",
+              "field": "_vgsid_"
+            }
+          ]
+        },
+        {
+          "name": "pts_toggle",
+          "value": false,
+          "on": [
+            {
+              "events": [
+                {
+                  "source": "scope",
+                  "type": "click"
+                }
+              ],
+              "update": "event.shiftKey"
+            },
+            {
+              "events": [
+                {
+                  "source": "scope",
+                  "type": "dblclick"
+                }
+              ],
+              "update": "false"
+            }
+          ]
+        },
+        {
+          "name": "pts_modify",
+          "on": [
+            {
+              "events": {
+                "signal": "pts_tuple"
+              },
+              "update": "modify(\"pts_store\", pts_toggle ? null : pts_tuple, pts_toggle ? null : true, pts_toggle ? pts_tuple : null)"
+            }
+          ]
+        }
+      ],
+      "marks": [
+        {
+          "name": "concat_0_marks",
+          "type": "rect",
+          "style": [
+            "bar"
+          ],
+          "interactive": true,
+          "from": {
+            "data": "data_1"
+          },
+          "encode": {
+            "update": {
+              "fill": [
+                {
+                  "test": "!(length(data(\"pts_store\"))) || (vlSelectionTest(\"pts_store\", datum))",
+                  "scale": "color",
+                  "field": "station"
+                },
+                {
+                  "value": "gainsboro"
+                }
+              ],
+              "tooltip": {
+                "signal": "{\"station\": isValid(datum[\"station\"]) ? datum[\"station\"] : \"\"+datum[\"station\"], \"month (month)\": timeFormat(datum[\"month_month\"], timeUnitSpecifier([\"month\"], {\"year-month\":\"%b %Y \",\"year-month-date\":\"%b %d, %Y \"})), \"total\": format(datum[\"total\"], \"\")}"
+              },
+              "xc": {
+                "signal": "scale(\"concat_0_x\", 0.5 * datum[\"month_month\"] + 0.5 * datum[\"month_month_end\"])"
+              },
+              "width": {
+                "value": 25
+              },
+              "y": {
+                "scale": "concat_0_y",
+                "field": "sum_total_end"
+              },
+              "y2": {
+                "scale": "concat_0_y",
+                "field": "sum_total_start"
+              }
+            }
+          }
+        }
+      ],
+      "axes": [
+        {
+          "scale": "concat_0_x",
+          "orient": "bottom",
+          "gridScale": "concat_0_y",
+          "grid": true,
+          "domain": false,
+          "labels": false,
+          "maxExtent": 0,
+          "minExtent": 0,
+          "ticks": false,
+          "zindex": 0
+        },
+        {
+          "scale": "concat_0_y",
+          "orient": "left",
+          "gridScale": "concat_0_x",
+          "grid": true,
+          "tickCount": {
+            "signal": "ceil(height/40)"
+          },
+          "domain": false,
+          "labels": false,
+          "maxExtent": 0,
+          "minExtent": 0,
+          "ticks": false,
+          "zindex": 0
+        },
+        {
+          "scale": "concat_0_x",
+          "orient": "bottom",
+          "grid": false,
+          "title": "Month",
+          "labelFlush": true,
+          "labelOverlap": true,
+          "encode": {
+            "labels": {
+              "update": {
+                "text": {
+                  "signal": "timeFormat(datum.value, timeUnitSpecifier([\"month\"], {\"year-month\":\"%b %Y \",\"year-month-date\":\"%b %d, %Y \"}))"
+                }
+              }
+            }
+          },
+          "zindex": 0
+        },
+        {
+          "scale": "concat_0_y",
+          "orient": "left",
+          "grid": false,
+          "title": "Total",
+          "labelOverlap": true,
+          "tickCount": {
+            "signal": "ceil(height/40)"
+          },
+          "zindex": 0
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "name": "concat_1_group",
+      "style": "cell",
+      "encode": {
+        "update": {
+          "width": {
+            "signal": "childWidth"
+          },
+          "height": {
+            "signal": "height"
+          },
+          "fill": {
+            "value": "white"
+          }
+        }
+      },
+      "signals": [
+        {
+          "name": "pts2_tuple",
+          "on": [
+            {
+              "events": [
+                {
+                  "source": "scope",
+                  "type": "click"
+                }
+              ],
+              "update": "datum && item().mark.marktype !== 'group' ? {unit: \"concat_1_layer_0\", fields: pts2_tuple_fields, values: [(item().isVoronoi ? datum.datum : datum)[\"_vgsid_\"]]} : null",
+              "force": true
+            },
+            {
+              "events": [
+                {
+                  "source": "scope",
+                  "type": "dblclick"
+                }
+              ],
+              "update": "null"
+            }
+          ]
+        },
+        {
+          "name": "pts2_tuple_fields",
+          "value": [
+            {
+              "type": "E",
+              "field": "_vgsid_"
+            }
+          ]
+        },
+        {
+          "name": "pts2_toggle",
+          "value": false,
+          "on": [
+            {
+              "events": [
+                {
+                  "source": "scope",
+                  "type": "click"
+                }
+              ],
+              "update": "event.shiftKey"
+            },
+            {
+              "events": [
+                {
+                  "source": "scope",
+                  "type": "dblclick"
+                }
+              ],
+              "update": "false"
+            }
+          ]
+        },
+        {
+          "name": "pts2_modify",
+          "on": [
+            {
+              "events": {
+                "signal": "pts2_tuple"
+              },
+              "update": "modify(\"pts2_store\", pts2_toggle ? null : pts2_tuple, pts2_toggle ? null : true, pts2_toggle ? pts2_tuple : null)"
+            }
+          ]
+        }
+      ],
+      "marks": [
+        {
+          "name": "concat_1_layer_0_pathgroup",
+          "type": "group",
+          "from": {
+            "facet": {
+              "name": "faceted_path_concat_1_layer_0_main",
+              "data": "source_0",
+              "groupby": [
+                "station"
+              ]
+            }
+          },
+          "encode": {
+            "update": {
+              "width": {
+                "field": {
+                  "group": "width"
+                }
+              },
+              "height": {
+                "field": {
+                  "group": "height"
+                }
+              }
+            }
+          },
+          "marks": [
+            {
+              "name": "concat_1_layer_0_marks",
+              "type": "line",
+              "style": [
+                "line"
+              ],
+              "sort": {
+                "field": "datum[\"month_month\"]"
+              },
+              "interactive": true,
+              "from": {
+                "data": "faceted_path_concat_1_layer_0_main"
+              },
+              "encode": {
+                "update": {
+                  "interpolate": {
+                    "value": "monotone"
+                  },
+                  "stroke": [
+                    {
+                      "test": "!(length(data(\"pts2_store\"))) || (vlSelectionTest(\"pts2_store\", datum))",
+                      "scale": "color",
+                      "field": "station"
+                    },
+                    {
+                      "value": "gainsboro"
+                    }
+                  ],
+                  "tooltip": {
+                    "signal": "{\"station\": isValid(datum[\"station\"]) ? datum[\"station\"] : \"\"+datum[\"station\"], \"month (month)\": timeFormat(datum[\"month_month\"], timeUnitSpecifier([\"month\"], {\"year-month\":\"%b %Y \",\"year-month-date\":\"%b %d, %Y \"})), \"total\": format(datum[\"total\"], \"\")}"
+                  },
+                  "x": {
+                    "scale": "concat_1_x",
+                    "field": "month_month"
+                  },
+                  "y": {
+                    "scale": "concat_1_y",
+                    "field": "total"
+                  },
+                  "defined": {
+                    "signal": "isValid(datum[\"total\"]) && isFinite(+datum[\"total\"])"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "concat_1_layer_1_marks",
+          "type": "symbol",
+          "style": [
+            "point"
+          ],
+          "interactive": false,
+          "from": {
+            "data": "data_0"
+          },
+          "encode": {
+            "update": {
+              "opacity": {
+                "value": 1
+              },
+              "fill": [
+                {
+                  "test": "!(length(data(\"pts2_store\"))) || (vlSelectionTest(\"pts2_store\", datum))",
+                  "scale": "color",
+                  "field": "station"
+                },
+                {
+                  "value": "gainsboro"
+                }
+              ],
+              "tooltip": {
+                "signal": "{\"station\": isValid(datum[\"station\"]) ? datum[\"station\"] : \"\"+datum[\"station\"], \"month (month)\": timeFormat(datum[\"month_month\"], timeUnitSpecifier([\"month\"], {\"year-month\":\"%b %Y \",\"year-month-date\":\"%b %d, %Y \"})), \"total\": format(datum[\"total\"], \"\")}"
+              },
+              "x": {
+                "scale": "concat_1_x",
+                "field": "month_month"
+              },
+              "y": {
+                "scale": "concat_1_y",
+                "field": "total"
+              }
+            }
+          }
+        }
+      ],
+      "axes": [
+        {
+          "scale": "concat_1_y",
+          "orient": "left",
+          "gridScale": "concat_1_x",
+          "grid": true,
+          "tickCount": {
+            "signal": "ceil(height/40)"
+          },
+          "domain": false,
+          "labels": false,
+          "maxExtent": 0,
+          "minExtent": 0,
+          "ticks": false,
+          "zindex": 0
+        },
+        {
+          "scale": "concat_1_x",
+          "orient": "bottom",
+          "grid": false,
+          "title": "Month",
+          "labelAlign": "right",
+          "labelAngle": 270,
+          "labelBaseline": "middle",
+          "encode": {
+            "labels": {
+              "update": {
+                "text": {
+                  "signal": "timeFormat(datum.value, timeUnitSpecifier([\"month\"], {\"year-month\":\"%b %Y \",\"year-month-date\":\"%b %d, %Y \"}))"
+                }
+              }
+            }
+          },
+          "zindex": 0
+        },
+        {
+          "scale": "concat_1_y",
+          "orient": "left",
+          "grid": false,
+          "title": "Total",
+          "labelOverlap": true,
+          "tickCount": {
+            "signal": "ceil(height/40)"
+          },
+          "zindex": 0
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": {
+        "fields": [
+          {
+            "data": "data_1",
+            "field": "station"
+          },
+          {
+            "data": "source_0",
+            "field": "station"
+          },
+          {
+            "data": "data_0",
+            "field": "station"
+          }
+        ],
+        "sort": true
+      },
+      "range": "category"
+    },
+    {
+      "name": "concat_0_x",
+      "type": "time",
+      "domain": {
+        "data": "data_1",
+        "fields": [
+          "month_month",
+          "month_month_end"
+        ]
+      },
+      "range": [
+        0,
+        {
+          "signal": "childWidth"
+        }
+      ]
+    },
+    {
+      "name": "concat_0_y",
+      "type": "linear",
+      "domain": {
+        "data": "data_1",
+        "fields": [
+          "sum_total_start",
+          "sum_total_end"
+        ]
+      },
+      "range": [
+        {
+          "signal": "height"
+        },
+        0
+      ],
+      "nice": true,
+      "zero": true
+    },
+    {
+      "name": "concat_1_x",
+      "type": "point",
+      "domain": {
+        "fields": [
+          {
+            "data": "source_0",
+            "field": "month_month"
+          },
+          {
+            "data": "data_0",
+            "field": "month_month"
+          }
+        ],
+        "sort": true
+      },
+      "range": [
+        0,
+        {
+          "signal": "childWidth"
+        }
+      ],
+      "padding": 0.5
+    },
+    {
+      "name": "concat_1_y",
+      "type": "linear",
+      "domain": {
+        "fields": [
+          {
+            "data": "source_0",
+            "field": "total"
+          },
+          {
+            "data": "data_0",
+            "field": "total"
+          }
+        ]
+      },
+      "range": [
+        {
+          "signal": "height"
+        },
+        0
+      ],
+      "nice": true,
+      "zero": true
+    }
+  ],
+  "legends": [
+    {
+      "fill": "color",
+      "symbolType": "circle",
+      "title": "station",
+      "stroke": "color",
+      "encode": {
+        "symbols": {
+          "update": {
+            "opacity": {
+              "value": 1
+            }
+          }
+        }
+      }
+    }
+  ],
+  "config": {}
+}
